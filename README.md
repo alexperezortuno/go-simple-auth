@@ -52,3 +52,19 @@ curl -X POST http://localhost:8080/api/validate -H "Content-Type: application/js
 ```shell
 curl -X GET http://localhost:8080/health | jq .
 ```
+
+---
+
+## Docker
+
+Create image
+```shell
+docker build -t go_auth:dev .
+```
+
+Run container
+```shell
+docker run --rm --name -d go_auth -p 8080:8080 -e JWT_TOKEN=li7lasdasiy3eliufdifsydfsdyfiuskh3kjlk2df89s -e PORT=8080 go_auth:dev
+```
+docker run --rm --name go_auth -d -p 8080:8080 -e JWT_TOKEN=li7lasdasiy3eliufdifsydfsdyfiuskh3kjlk2df89s -e PORT=8080  go-simple-auth:dev
+docker run --name go_auth -d -p 8080:8080 -e JWT_TOKEN=li7lasdasiy3eliufdifsydfsdyfiuskh3kjlk2df89s -e PORT=8080  go-simple-auth:dev

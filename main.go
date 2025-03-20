@@ -88,7 +88,7 @@ func initDatabase(migrate bool) {
 }
 
 // Función para registrar un usuario desde la terminal
-func createUser(username, password string) {
+func createUser(username, password string, migrate bool) {
 	// Hashear la contraseña antes de guardarla
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -329,7 +329,8 @@ func main() {
 
 	// Modo para crear usuario desde terminal
 	if len(os.Args) >= 3 && os.Args[1] == "create-user" {
-		createUser(os.Args[2], os.Args[3])
+		m := getEnvBool(os.Args[4], false)
+		createUser(os.Args[2], os.Args[3], m)
 		return
 	}
 
