@@ -25,7 +25,7 @@ GOOS=$(go env GOOS) GOARCH=$(go env GOARCH) go build -o $(pwd)/dist/go_auth_$(go
 ```shell
 cd dist
 
-export export JWT_TOKEN=li7lasdasiy3eliufdifsydfsdyfiuskh3kjlk2df89s; export PORT=8081 && ./go_auth_$(go env GOOS)_$(go env GOARCH)
+export export JWT_TOKEN=mysecret; export PORT=8080 && ./go_auth_$(go env GOOS)_$(go env GOARCH)
 ```
 
 ## Endpoints
@@ -64,5 +64,5 @@ docker build -t go_auth:dev .
 
 Run container
 ```shell
-docker run --rm --name go_auth -d -p 8080:8080 -e JWT_TOKEN=mysecret -e PORT=8080  go-simple-auth:dev
+docker run --rm --name go_auth -d -p 8080:8080 -e JWT_TOKEN=mysecret -e PORT=8080 go_auth:dev
 ```
