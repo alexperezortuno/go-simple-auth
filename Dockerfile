@@ -13,7 +13,7 @@ RUN CGO_ENABLED=1 GOOS=$(go env GOOS) GOARCH=$(go env GOARCH) go build -o /go/bi
 
 FROM nginx:1.27.4-alpine-slim
 
-RUN apk add --no-cache sqlite-libs sqlite-dev sqlite
+RUN apk add --no-cache sqlite
 
 COPY --from=builder /go/bin/go-simple-auth /usr/local/bin/go-simple-auth
 
