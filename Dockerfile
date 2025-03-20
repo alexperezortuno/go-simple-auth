@@ -11,17 +11,13 @@ RUN go env
 RUN go version
 RUN CGO_ENABLED=1 GOOS=$(go env GOOS) GOARCH=$(go env GOARCH) go build -o /go/bin/go-simple-auth
 
-FROM nginx:1.27.4-alpine-slim
+FROM alpine:3.21.3
 
-RUN apk add --no-cache sqlite
+RUN apk add --no-cache sqlite bash
 
 COPY --from=builder /go/bin/go-simple-auth /usr/local/bin/go-simple-auth
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
-
-COPY nginx.conf /etc/nginx/nginx.conf
-
-RUN chmod +x /usr/local/bin/go-simple-auth
 
 CMD ["/usr/local/bin/entrypoint.sh"]

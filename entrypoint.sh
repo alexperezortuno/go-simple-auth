@@ -17,6 +17,6 @@ sqlite3 $DB_FILE "$SQL_CREATE_TABLE"
 chmod +x /usr/local/bin/users.db
 
 echo "Database and table created successfully."
+chmod +x /usr/local/bin/go-simple-auth
 
 /usr/local/bin/go-simple-auth
-nginx -g "daemon off;"

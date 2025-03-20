@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/gin-contrib/gzip"
 	"log"
 	"net/http"
 	"os"
@@ -54,7 +55,7 @@ func requestLogger() gin.HandlerFunc /**/ {
 		c.Next()
 
 		// Calcular el tiempo de respuesta
-		duration := time.Since(startTime)
+		duration := time.Since(startTime).Milliseconds()
 		log.Printf("request %s %s took %v", c.Request.Method, c.Request.URL.Path, duration)
 	}
 }
@@ -334,6 +335,7 @@ func handleShutdown() {
 }
 
 func main() {
+	gin.SetMode(gin.ReleaseMode)
 	handleShutdown()
 
 	// Inicializar base de datos
@@ -353,15 +355,17 @@ func main() {
 
 	r := gin.Default()
 
+	subDir := "/api"
+	r.Use(gzip.Gzip(gzip.BestSpeed))
 	// Añadir el middleware de registro de tiempo de respuesta
 	r.Use(requestLogger())
-	r.POST("/login", loginHandler)          // Generar token con usuario y contraseña
-	r.GET("/health", func(c *gin.Context) { // Endpoint para verificar la salud del servidor
+	r.POST(fmt.Sprintf("%s/login", subDir), loginHandler)          // Generar token con usuario y contraseña
+	r.GET(fmt.Sprintf("%s/health", subDir), func(c *gin.Context) { // Endpoint para verificar la salud del servidor
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
 	// Rutas protegidas
-	protected := r.Group("/api")
+	protected := r.Group(subDir)
 	protected.Use(authMiddleware())
 	protected.POST("/renew", renewTokenHandler)  // Renovar token existente
 	protected.POST("/validate", validateHandler) // Validar token
