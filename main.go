@@ -25,16 +25,16 @@ type User struct {
 	Password string
 }
 
-// Variables globales
-var (
-	db        *gorm.DB
-	jwtSecret = []byte("supersecretkey")
-)
-
 type CustomError struct {
 	Message string
 	Code    int
 }
+
+// Variables globales
+var (
+	db        *gorm.DB
+	jwtSecret = []byte(getEnvStr("JWT_SECRET", "secret"))
+)
 
 func (e *CustomError) Error() string {
 	return fmt.Sprintf("Error %d: %s", e.Code, e.Message)
@@ -163,26 +163,38 @@ func loginHandler(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid format"})
+		c.JSON(http.StatusBadRequest, &CustomError{
+			Message: "invalid format",
+			Code:    -4001,
+		})
 		return
 	}
 
 	var user User
 	if err := db.Where("username = ?", req.Username).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user or password"})
+		c.JSON(http.StatusUnauthorized, &CustomError{
+			Message: "invalid user or password",
+			Code:    -4002,
+		})
 		return
 	}
 
 	// Comparar la contraseña hasheada
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user or password"})
+		c.JSON(http.StatusUnauthorized, &CustomError{
+			Message: "invalid user or password",
+			Code:    -4003,
+		})
 		return
 	}
 
 	// Generar token
 	token, err := generateToken(req.Username)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+		c.JSON(http.StatusInternalServerError, &CustomError{
+			Message: "failed to generate token",
+			Code:    -4004,
+		})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"token": token})
@@ -197,7 +209,10 @@ func renewTokenHandler(c *gin.Context) {
 	tokenStore.RUnlock()
 
 	if !exists || time.Now().After(expirationTime) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "token invalid or expired"})
+		c.JSON(http.StatusUnauthorized, &CustomError{
+			Message: "token invalid or expired",
+			Code:    -3001,
+		})
 		return
 	}
 
@@ -213,14 +228,20 @@ func renewTokenHandler(c *gin.Context) {
 
 	username, ok := claims["username"].(string)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+		c.JSON(http.StatusUnauthorized, &CustomError{
+			Message: "invalid token",
+			Code:    -3002,
+		})
 		return
 	}
 
 	// Generar un nuevo token
 	newToken, err := generateToken(username)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "No se pudo renovar el token"})
+		c.JSON(http.StatusInternalServerError, &CustomError{
+			Message: "failed to generate token",
+			Code:    -3003,
+		})
 		return
 	}
 
@@ -240,14 +261,14 @@ func validateToken(tokenString string) (string, *CustomError) {
 	if err != nil {
 		return "", &CustomError{
 			Message: fmt.Sprintf("invalid token: %s", err.Error()),
-			Code:    http.StatusUnauthorized,
+			Code:    -2001,
 		}
 	}
 
 	if !token.Valid {
 		return "", &CustomError{
 			Message: "invalid token",
-			Code:    http.StatusUnauthorized,
+			Code:    -2002,
 		}
 	}
 
@@ -255,7 +276,7 @@ func validateToken(tokenString string) (string, *CustomError) {
 	if !ok {
 		return "", &CustomError{
 			Message: "invalid token",
-			Code:    http.StatusUnauthorized,
+			Code:    -2003,
 		}
 	}
 
@@ -269,7 +290,7 @@ func validateHandler(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, &CustomError{
 			Message: "invalid token",
-			Code:    http.StatusUnauthorized,
+			Code:    err.Code,
 		})
 		return
 	}
@@ -279,12 +300,12 @@ func validateHandler(c *gin.Context) {
 
 // Función para limpiar la memoria antes de salir
 func cleanup() {
-	fmt.Println("\n🧹 Limpiando memoria antes de salir...")
+	fmt.Println("\n🧹 Cleaning memory before exiting...")
 	tokenStore.Lock()
 	tokenStore.tokens = make(map[string]time.Time) // Vaciar los tokens
 	tokenStore.Unlock()
 
-	fmt.Println("✅ Memoria limpiada. Saliendo...")
+	fmt.Println("✅ Memory cleaned. Exiting...")
 	os.Exit(0) // Salir del programa
 }
 
@@ -324,9 +345,6 @@ func main() {
 	protected.Use(authMiddleware())
 	protected.POST("/renew", renewTokenHandler)  // Renovar token existente
 	protected.POST("/validate", validateHandler) // Validar token
-	protected.GET("/data", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "Acceso autorizado"})
-	})
 
 	port := getEnvInt("PORT", 8080)
 	log.Printf("server running in http://localhost:%d", port)

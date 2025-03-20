@@ -12,12 +12,20 @@ go get golang.org/x/crypto/bcrypt
 
 ## Run
 
-```bash
+```shell
 go run main.go
 ```
 
+## Build
+
 ```shell
 GOOS=$(go env GOOS) GOARCH=$(go env GOARCH) go build -o $(pwd)/dist/go_auth_$(go env GOOS)_$(go env GOARCH)
+```
+
+```shell
+cd dist
+
+export export JWT_TOKEN=li7lasdasiy3eliufdifsydfsdyfiuskh3kjlk2df89s; export PORT=8081 && ./go_auth_$(go env GOOS)_$(go env GOARCH)
 ```
 
 ## Endpoints
