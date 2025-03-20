@@ -46,6 +46,19 @@ var tokenStore = struct {
 	tokens map[string]time.Time
 }{tokens: make(map[string]time.Time)}
 
+func requestLogger() gin.HandlerFunc /**/ {
+	return func(c *gin.Context) {
+		startTime := time.Now()
+
+		// Procesar la solicitud
+		c.Next()
+
+		// Calcular el tiempo de respuesta
+		duration := time.Since(startTime)
+		log.Printf("request %s %s took %v", c.Request.Method, c.Request.URL.Path, duration)
+	}
+}
+
 func getEnvStr(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value
@@ -340,6 +353,8 @@ func main() {
 
 	r := gin.Default()
 
+	// Añadir el middleware de registro de tiempo de respuesta
+	r.Use(requestLogger())
 	r.POST("/login", loginHandler)          // Generar token con usuario y contraseña
 	r.GET("/health", func(c *gin.Context) { // Endpoint para verificar la salud del servidor
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
