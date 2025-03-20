@@ -27,3 +27,4 @@ go.work.sum
 .vscode
 go.sum
 *.db
+go_aut*
