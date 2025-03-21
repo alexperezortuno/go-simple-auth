@@ -48,7 +48,7 @@ var tokenStore = struct {
 	tokens map[string]time.Time
 }{tokens: make(map[string]time.Time)}
 
-func requestLogger() gin.HandlerFunc /**/ {
+func requestLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		startTime := time.Now()
 
@@ -56,7 +56,7 @@ func requestLogger() gin.HandlerFunc /**/ {
 		c.Next()
 
 		// Calcular el tiempo de respuesta
-		duration := time.Since(startTime).Milliseconds()
+		duration := time.Since(startTime)
 		log.Printf("request %s %s took %v", c.Request.Method, c.Request.URL.Path, duration)
 	}
 }
