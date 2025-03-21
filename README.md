@@ -33,24 +33,24 @@ export export JWT_TOKEN=mysecret; export PORT=8080 && ./go_auth_$(go env GOOS)_$
 ### Create token
 
 ```shell
-curl -X POST http://localhost:8080/login -d '{"username": "admin", "password": "admin"}' -H "Content-Type: application/json" | jq .token
+curl -X POST http://localhost:8080/auth/login -d '{"username": "admin", "password": "admin"}' -H "Content-Type: application/json" | jq .token
 ```
 
 ### Renew token
 
 ```shell
-curl -X POST http://localhost:8080/api/renew -H "Content-Type: application/json" -H "Authorization: <TOKEN>" | jq .
+curl -X POST http://localhost:8080/auth/renew -H "Content-Type: application/json" -H "Authorization: <TOKEN>" | jq .
 ```
 
 ### Validate token
 ```shell
-curl -X POST http://localhost:8080/api/validate -H "Content-Type: application/json" -H "Authorization: <TOKEN>" | jq .
+curl -X POST http://localhost:8080/auth/validate -H "Content-Type: application/json" -H "Authorization: <TOKEN>" | jq .
 ```
 
 ### Health check
 
 ```shell
-curl -X GET http://localhost:8080/health | jq .
+curl -X GET http://localhost:8080/auth/health | jq .
 ```
 
 ---
