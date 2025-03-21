@@ -35,6 +35,7 @@ type CustomError struct {
 var (
 	db        *gorm.DB
 	jwtSecret = []byte(getEnvStr("JWT_SECRET", "secret"))
+	subDir    = getEnvStr("CONTEXT", "/auth")
 )
 
 func (e *CustomError) Error() string {
@@ -333,13 +334,25 @@ func handleShutdown() {
 	}()
 }
 
-func generalCofig() {
-
+func generalConfig() {
+	rel := getEnvStr("RELEASE", "prod")
+	switch rel {
+	case "dev":
+		gin.SetMode(gin.DebugMode)
+		break
+	case "test":
+		gin.SetMode(gin.TestMode)
+		break
+	case "prod":
+		gin.SetMode(gin.ReleaseMode)
+		break
+	default:
+		log.Fatalf("Invalid environment: %s", rel)
+	}
 }
 
 func main() {
-
-	gin.SetMode(gin.ReleaseMode)
+	generalConfig()
 	handleShutdown()
 
 	// Inicializar base de datos
@@ -359,7 +372,6 @@ func main() {
 
 	r := gin.Default()
 
-	subDir := "/api"
 	r.Use(gzip.Gzip(gzip.BestSpeed))
 	// Añadir el middleware de registro de tiempo de respuesta
 	r.Use(requestLogger())
