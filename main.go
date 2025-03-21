@@ -1,11 +1,8 @@
 package main
 
 import (
-	"context"
-	"errors"
 	"fmt"
 	"github.com/gin-contrib/gzip"
-	"github.com/redis/go-redis/v9"
 	"log"
 	"net/http"
 	"os"
@@ -36,10 +33,8 @@ type CustomError struct {
 
 // Variables globales
 var (
-	db          *gorm.DB
-	redisClient *redis.Client
-	jwtSecret   = []byte(getEnvStr("JWT_SECRET", "secret"))
-	ctx         = context.Background()
+	db        *gorm.DB
+	jwtSecret = []byte(getEnvStr("JWT_SECRET", "secret"))
 )
 
 func (e *CustomError) Error() string {
@@ -106,19 +101,6 @@ func initDatabase(migrate bool) {
 	}
 }
 
-// Inicializar Redis
-func initRedis() {
-	redisClient = redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", getEnvStr("REDIS_HOST", "localhost"), getEnvStr("REDIS_PORT", "6379")),
-		Password: getEnvStr("REDIS_PASSWORD", "myStrongPassword"),
-	})
-	_, err := redisClient.Ping(ctx).Result()
-	if err != nil {
-		log.Fatal("Error al conectar con Redis:", err)
-	}
-	fmt.Println("✅ Redis conectado")
-}
-
 // Función para registrar un usuario desde la terminal
 func createUser(username, password string, migrate bool) {
 	// Hashear la contraseña antes de guardarla
@@ -149,8 +131,6 @@ func generateToken(username string) (string, error) {
 		return "", err
 	}
 
-	// Guardar en Redis
-	err = redisClient.Set(ctx, tokenString, username, time.Hour).Err()
 	if err != nil {
 		return "", err
 	}
@@ -171,19 +151,19 @@ func authMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Validar token en Redis
-		username, err := redisClient.Get(ctx, tokenString).Result()
-		if errors.Is(err, redis.Nil) {
-			c.JSON(http.StatusUnauthorized, CustomError{Message: "invalid token", Code: -1002})
-			c.Abort()
-			return
-		} else if err != nil {
-			c.JSON(http.StatusInternalServerError, CustomError{Message: "failed to validate token", Code: -1003})
+		tokenStore.RLock()
+		expirationTime, exists := tokenStore.tokens[tokenString]
+		tokenStore.RUnlock()
+
+		if !exists || time.Now().After(expirationTime) {
+			c.JSON(http.StatusUnauthorized, &CustomError{
+				Message: "token invalid or expired",
+				Code:    -1002,
+			})
 			c.Abort()
 			return
 		}
 
-		c.Set("username", username) // Pasar username a la ruta
 		c.Next()
 	}
 }
@@ -353,9 +333,14 @@ func handleShutdown() {
 	}()
 }
 
+func generalCofig() {
+
+}
+
 func main() {
+
 	gin.SetMode(gin.ReleaseMode)
-	initRedis()
+	handleShutdown()
 
 	// Inicializar base de datos
 	migrate := getEnvBool("MIGRATE", false)
