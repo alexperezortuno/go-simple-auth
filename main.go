@@ -372,6 +372,7 @@ func main() {
 
 	r := gin.Default()
 
+	r.Use(gzip.Gzip(gzip.BestCompression))
 	r.Use(gzip.Gzip(gzip.BestSpeed))
 	// Añadir el middleware de registro de tiempo de respuesta
 	r.Use(requestLogger())
