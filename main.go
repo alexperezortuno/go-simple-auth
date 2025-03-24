@@ -387,7 +387,7 @@ func main() {
 	protected.POST("/renew", renewTokenHandler)  // Renovar token existente
 	protected.POST("/validate", validateHandler) // Validar token
 
-	port := getEnvInt("PORT", 8081)
+	port := getEnvInt("PORT", 8080)
 	log.Printf("server running in http://localhost:%d", port)
 	err := r.Run(fmt.Sprintf(":%d", port))
 	if err != nil {
