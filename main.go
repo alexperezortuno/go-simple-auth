@@ -132,9 +132,9 @@ func generateToken(username string) (string, error) {
 		return "", err
 	}
 
-	if err != nil {
-		return "", err
-	}
+	tokenStore.Lock()
+	tokenStore.tokens[tokenString] = expirationTime
+	tokenStore.Unlock()
 
 	return tokenString, nil
 }
@@ -154,6 +154,7 @@ func authMiddleware() gin.HandlerFunc {
 
 		tokenStore.RLock()
 		expirationTime, exists := tokenStore.tokens[tokenString]
+		log.Printf("exists: %v, expirationTime: %v", exists, expirationTime)
 		tokenStore.RUnlock()
 
 		if !exists || time.Now().After(expirationTime) {
@@ -375,8 +376,9 @@ func main() {
 
 	if compressed {
 		r.Use(gzip.Gzip(gzip.BestCompression))
-		r.Use(gzip.Gzip(gzip.BestSpeed))
 	}
+
+	r.Use(gzip.Gzip(gzip.BestSpeed))
 
 	// Añadir el middleware de registro de tiempo de respuesta
 	r.Use(requestLogger())
