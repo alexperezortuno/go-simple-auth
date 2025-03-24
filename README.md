@@ -64,5 +64,5 @@ docker build -t go_auth:dev .
 
 Run container
 ```shell
-docker run --rm --name go_auth -d -e PORT=8081 -e JWT_TOKEN=mysecret go_auth:dev
+docker run --rm --name go_auth -d --network host -e MIGRATE=true -e PORT=8081 -e JWT_TOKEN=mysecret go_auth:dev
 ```

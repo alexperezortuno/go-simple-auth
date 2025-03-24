@@ -357,6 +357,7 @@ func main() {
 
 	// Inicializar base de datos
 	migrate := getEnvBool("MIGRATE", false)
+	compressed := getEnvBool("COMPRESSED", false)
 	initDatabase(migrate)
 
 	// Modo para crear usuario desde terminal
@@ -372,8 +373,11 @@ func main() {
 
 	r := gin.Default()
 
-	r.Use(gzip.Gzip(gzip.BestCompression))
-	r.Use(gzip.Gzip(gzip.BestSpeed))
+	if compressed {
+		r.Use(gzip.Gzip(gzip.BestCompression))
+		r.Use(gzip.Gzip(gzip.BestSpeed))
+	}
+
 	// Añadir el middleware de registro de tiempo de respuesta
 	r.Use(requestLogger())
 	r.POST(fmt.Sprintf("%s/login", subDir), loginHandler)          // Generar token con usuario y contraseña
