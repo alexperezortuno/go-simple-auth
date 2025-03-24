@@ -25,7 +25,7 @@ GOOS=$(go env GOOS) GOARCH=$(go env GOARCH) go build -o $(pwd)/dist/go_auth_$(go
 ```shell
 cd dist
 
-export export JWT_TOKEN=mysecret; export PORT=8080 && ./go_auth_$(go env GOOS)_$(go env GOARCH)
+export export JWT_TOKEN=mysecret; export PORT=8081 && ./go_auth_$(go env GOOS)_$(go env GOARCH)
 ```
 
 ## Endpoints
