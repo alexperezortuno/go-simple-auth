@@ -1,8 +1,8 @@
 FROM golang:1.24-alpine AS builder
 
-RUN apk add --no-cache build-base
+RUN apk add --no-cache build-base git
 
-COPY . /go/src/github.com/alexperezortuno/go-simple-auth
+RUN git clone https://github.com/alexperezortuno/go-simple-auth.git /go/src/github.com/alexperezortuno/go-simple-auth --depth 1
 
 WORKDIR /go/src/github.com/alexperezortuno/go-simple-auth
 
