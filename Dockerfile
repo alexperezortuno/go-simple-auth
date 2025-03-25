@@ -16,8 +16,8 @@ FROM alpine:3.21.3
 RUN apk add --no-cache sqlite bash
 
 COPY --from=builder /go/bin/go-simple-auth /usr/local/bin/go-simple-auth
+COPY --from=builder /go/src/github.com/alexperezortuno/go-simple-auth/entrypoint.sh /usr/local/bin/entrypoint.sh
 
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 CMD ["/usr/local/bin/entrypoint.sh"]
