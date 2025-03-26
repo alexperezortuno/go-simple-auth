@@ -15,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/time/rate"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -36,6 +37,7 @@ var (
 	db        *gorm.DB
 	jwtSecret = []byte(getEnvStr("JWT_SECRET", "secret"))
 	subDir    = getEnvStr("CONTEXT", "/auth")
+	limiter   = rate.NewLimiter(1, 3)
 )
 
 func (e *CustomError) Error() string {
@@ -166,6 +168,16 @@ func authMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		c.Next()
+	}
+}
+
+func rateLimit() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if !limiter.Allow() {
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"error": "rate limit exceeded"})
+			return
+		}
 		c.Next()
 	}
 }
@@ -379,9 +391,11 @@ func main() {
 	}
 
 	r.Use(gzip.Gzip(gzip.BestSpeed))
-
 	// Añadir el middleware de registro de tiempo de respuesta
 	r.Use(requestLogger())
+	r.Use(rateLimit())
+
+	// Handlers
 	r.POST(fmt.Sprintf("%s/login", subDir), loginHandler)          // Generar token con usuario y contraseña
 	r.GET(fmt.Sprintf("%s/health", subDir), func(c *gin.Context) { // Endpoint para verificar la salud del servidor
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
