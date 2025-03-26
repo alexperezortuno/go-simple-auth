@@ -175,7 +175,7 @@ func authMiddleware() gin.HandlerFunc {
 func rateLimit() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !limiter.Allow() {
-			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"error": "rate limit exceeded"})
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, CustomError{Message: "rate limit exceeded", Code: -1003})
 			return
 		}
 		c.Next()
