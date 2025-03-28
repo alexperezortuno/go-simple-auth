@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	handler "github.com/alexperezortuno/go-simple-auth/delivery/http"
 	"github.com/alexperezortuno/go-simple-auth/infra"
@@ -87,7 +88,7 @@ func (s *Server) Run(ctx context.Context) error {
 	}
 
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatal("server shut down", err)
 			infra.CleanupTokens()
 		}
