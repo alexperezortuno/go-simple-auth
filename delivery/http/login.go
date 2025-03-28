@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"github.com/alexperezortuno/go-simple-auth/infra"
 	"github.com/alexperezortuno/go-simple-auth/internal/config"
 	"github.com/alexperezortuno/go-simple-auth/internal/errors"
 	"github.com/alexperezortuno/go-simple-auth/usecase"
@@ -45,7 +46,7 @@ func (s *LoginHandler) Login(c *gin.Context) {
 	}
 
 	// Generar token
-	token, err := generateToken(req.Username)
+	token, err := infra.GenerateToken(req.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errors.NewCustomError(errors.FailedToGenerateToken))
 		return

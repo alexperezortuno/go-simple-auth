@@ -14,25 +14,24 @@ type User struct {
 	Password string
 }
 
-type UserRepository struct {
-	db *gorm.DB
+type PostgresUserRepository struct {
+	Db *gorm.DB
 }
 
-func NewUserRepository(db *gorm.DB) *UserRepository {
-	return &UserRepository{db}
-}
+//func NewUserRepository(db *gorm.DB) *PostgresUserRepository {
+//	return &PostgresUserRepository{db}
+//}
 
-// Función para registrar un usuario desde la terminal
-func (r *UserRepository) Create(ctx context.Context, username, password string) error {
+func (r *PostgresUserRepository) Save(ctx context.Context, u *domain.User) error {
 	// Hashear la contraseña antes de guardarla
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Fatal("error hashing the password:", err)
 		return err
 	}
 
 	// Guardar usuario en la base de datos
-	user := User{Username: username, Password: string(hashedPassword)}
+	user := User{Username: u.Username, Password: string(hashedPassword)}
 	if err := db.WithContext(ctx).Create(&user).Error; err != nil {
 		log.Fatal("error creating user:", err)
 		return err
@@ -41,7 +40,7 @@ func (r *UserRepository) Create(ctx context.Context, username, password string) 
 	return nil
 }
 
-func (r *UserRepository) Get(ctx context.Context, username string) (*domain.User, error) {
+func (r *PostgresUserRepository) Get(ctx context.Context, username string) (*domain.User, error) {
 	var user domain.User
 	if err := db.WithContext(ctx).Where("username = ?", username).First(&user).Error; err != nil {
 		return nil, err

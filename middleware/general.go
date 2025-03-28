@@ -2,19 +2,23 @@ package middleware
 
 import (
 	"fmt"
+	"github.com/alexperezortuno/go-simple-auth/internal/errors"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/time/rate"
 	"log"
 	"net/http"
 	"runtime/debug"
 	"time"
 )
 
+var limiter = rate.NewLimiter(1, 3)
+
 func CustomRecovery() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
 				fmt.Printf("PANIC recovered: %v\nStack: %s\n", err, debug.Stack())
-				c.AbortWithStatusJSON(http.StatusInternalServerError, CustomError{Message: "internal server error", Code: -5000})
+				c.AbortWithStatusJSON(http.StatusInternalServerError, errors.NewCustomError(errors.InternalServerError))
 			}
 		}()
 		c.Next()
@@ -24,7 +28,7 @@ func CustomRecovery() gin.HandlerFunc {
 func RateLimit() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !limiter.Allow() {
-			c.AbortWithStatusJSON(http.StatusTooManyRequests, CustomError{Message: "rate limit exceeded", Code: -1003})
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, errors.NewCustomError(errors.RateLimitExceeded))
 			return
 		}
 		c.Next()

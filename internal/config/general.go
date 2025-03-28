@@ -20,6 +20,7 @@ type Config struct {
 	UrlTokenVerifier string
 	SubDir           string
 	ShutdownTimeout  int
+	Release          string
 }
 
 func GetConfigs() Config {
@@ -38,13 +39,12 @@ func GetConfigs() Config {
 		Schema:           GetEnvStr("DB_SCHEMA", "public"),
 		UrlTokenVerifier: GetEnvStr("URL_TOKEN_VERIFIER", "localhost"),
 		ShutdownTimeout:  GetEnvInt("SHUTDOWN_TIMEOUT", 10),
+		Release:          GetEnvStr("RELEASE", "prod"),
 	}
 }
 
-func SetGinMode() {
-	release := GetEnvStr("RELEASE", "prod")
-
-	switch release {
+func (c *Config) SetGinMode() {
+	switch c.Release {
 	case "dev":
 		gin.SetMode(gin.DebugMode)
 	case "test":
@@ -52,6 +52,6 @@ func SetGinMode() {
 	case "prod":
 		gin.SetMode(gin.ReleaseMode)
 	default:
-		log.Fatalf("Invalid environment: %s", release)
+		log.Fatalf("Invalid environment: %s", c.Release)
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	handler "github.com/alexperezortuno/go-simple-auth/delivery/http"
+	"github.com/alexperezortuno/go-simple-auth/infra"
 	"github.com/alexperezortuno/go-simple-auth/infra/postgres"
 	"github.com/alexperezortuno/go-simple-auth/internal/config"
 	"github.com/alexperezortuno/go-simple-auth/middleware"
@@ -25,6 +26,7 @@ type Server struct {
 }
 
 func New(ctx context.Context, conf config.Config) (context.Context, Server) {
+	conf.SetGinMode()
 	srv := Server{
 		engine:          gin.New(),
 		httpAddr:        fmt.Sprintf("%s:%d", conf.Host, conf.Port),
@@ -60,7 +62,7 @@ func (s *Server) registerRoutes(conf config.Config) {
 		postgres.Migrate(conf)
 
 		// Repositorios
-		repo := postgres.NewUserRepository(postgres.Connection)
+		repo := &postgres.PostgresUserRepository{Db: postgres.Connection}
 		service = usecase.NewUserService(repo)
 	}
 
@@ -87,6 +89,7 @@ func (s *Server) Run(ctx context.Context) error {
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal("server shut down", err)
+			infra.CleanupTokens()
 		}
 	}()
 
