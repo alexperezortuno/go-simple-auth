@@ -11,7 +11,6 @@ import (
 	"github.com/alexperezortuno/go-simple-auth/middleware"
 	"github.com/alexperezortuno/go-simple-auth/usecase"
 	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -40,9 +39,10 @@ func New(ctx context.Context, conf config.Config) (context.Context, Server) {
 }
 
 func (s *Server) registerRoutes(conf config.Config) {
-	s.engine.Use(gzip.Gzip(gzip.DefaultCompression))
-	s.engine.Use(gzip.Gzip(gzip.BestSpeed))
+	//s.engine.Use(gzip.Gzip(gzip.DefaultCompression))
+	//s.engine.Use(gzip.Gzip(gzip.BestSpeed))
 	// Añadir el middleware de registro de tiempo de respuesta
+	s.engine.Use(middleware.GzipWithMetrics("/auth"))
 	s.engine.Use(middleware.RequestLogger())
 	s.engine.Use(middleware.RateLimit())
 	s.engine.Use(middleware.CustomRecovery())
@@ -59,11 +59,10 @@ func (s *Server) registerRoutes(conf config.Config) {
 
 	if conf.DBEngine == "postgres" {
 		postgres.Initialize(conf)
-		defer postgres.CloseConnection()
 		postgres.Migrate(conf)
 
 		// Repositorios
-		repo := &postgres.PostgresUserRepository{Db: postgres.Connection}
+		repo := postgres.NewUserRepository(postgres.Db)
 		service = usecase.NewUserService(repo)
 	}
 
@@ -91,6 +90,7 @@ func (s *Server) Run(ctx context.Context) error {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatal("server shut down", err)
 			infra.CleanupTokens()
+			postgres.CloseConnection()
 		}
 	}()
 

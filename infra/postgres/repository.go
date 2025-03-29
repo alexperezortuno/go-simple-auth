@@ -18,9 +18,9 @@ type PostgresUserRepository struct {
 	Db *gorm.DB
 }
 
-//func NewUserRepository(db *gorm.DB) *PostgresUserRepository {
-//	return &PostgresUserRepository{db}
-//}
+func NewUserRepository(db *gorm.DB) *PostgresUserRepository {
+	return &PostgresUserRepository{Db: db}
+}
 
 func (r *PostgresUserRepository) Save(ctx context.Context, u *domain.User) error {
 	// Hashear la contraseña antes de guardarla
@@ -32,7 +32,7 @@ func (r *PostgresUserRepository) Save(ctx context.Context, u *domain.User) error
 
 	// Guardar usuario en la base de datos
 	user := User{Username: u.Username, Password: string(hashedPassword)}
-	if err := db.WithContext(ctx).Create(&user).Error; err != nil {
+	if err := Db.WithContext(ctx).Create(&user).Error; err != nil {
 		log.Fatal("error creating user:", err)
 		return err
 	}
@@ -42,7 +42,9 @@ func (r *PostgresUserRepository) Save(ctx context.Context, u *domain.User) error
 
 func (r *PostgresUserRepository) Get(ctx context.Context, username string) (*domain.User, error) {
 	var user domain.User
-	if err := db.WithContext(ctx).Where("username = ?", username).First(&user).Error; err != nil {
+
+	// Check if user exists
+	if err := Db.WithContext(ctx).Where("username = ?", username).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil

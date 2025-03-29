@@ -29,3 +29,17 @@ func GetEnvBool(key string, fallback bool) bool {
 	}
 	return fallback
 }
+
+func SetEnvBool(key string, value string) {
+	if value == "true" {
+		err := os.Setenv(key, "true")
+		if err != nil {
+			return
+		}
+	} else {
+		err := os.Setenv(key, "false")
+		if err != nil {
+			return
+		}
+	}
+}
